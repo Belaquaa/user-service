@@ -1,6 +1,5 @@
 package belaquaa.userserviceuser.kafka;
 
-import belaquaa.userserviceuser.model.User;
 import belaquaa.userserviceuser.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +18,18 @@ public class UserRestoredListener {
     private final CacheManager cacheManager;
     private final UserRepository userRepository;
 
-    @KafkaListener(topics = "user-restored-topic", groupId = "user-service-group")
+    @KafkaListener(
+            topics = "user-restored-topic",
+            containerFactory = "userServiceAdminKafkaListenerContainerFactory"
+    )
     public void listenUserRestored(Long userId) {
         Cache cache = cacheManager.getCache("users");
         if (cache != null) {
             cache.evict(userId);
-            User user = userRepository.findByIdAndIsDeletedFalse(userId).orElse(null);
-            if (user != null) Objects.requireNonNull(cacheManager.getCache("users")).put(userId, user);
+            userRepository.findByIdAndIsDeletedFalse(userId)
+                    .ifPresent(user -> Objects
+                            .requireNonNull(cacheManager.getCache("users"))
+                            .put(userId, user));
         } else {
             log.warn("Кэш 'users' не найден!");
         }

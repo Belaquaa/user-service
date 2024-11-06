@@ -14,7 +14,10 @@ public class UserDeletedListener {
 
     private final CacheManager cacheManager;
 
-    @KafkaListener(topics = "user-deleted-topic", groupId = "user-service-group")
+    @KafkaListener(
+            topics = "user-deleted-topic",
+            containerFactory = "userServiceKafkaListenerContainerFactory"
+    )
     public void listenUserDeleted(Long userId) {
         Cache cache = cacheManager.getCache("users");
         if (cache != null) {

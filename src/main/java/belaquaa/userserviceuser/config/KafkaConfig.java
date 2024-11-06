@@ -25,6 +25,15 @@ public class KafkaConfig {
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
 
+    @Value("${kafka.consumer.user-service-group-id}")
+    private String userServiceGroupId;
+
+    @Value("${kafka.consumer.user-service-admin-group-id}")
+    private String userServiceAdminGroupId;
+
+    @Value("${HOSTNAME}")
+    private String hostname;
+
     @Bean
     public ProducerFactory<String, Long> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -39,20 +48,39 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory());
     }
 
+    // Конфигурация для user-service-group
     @Bean
-    public ConsumerFactory<String, Long> consumerFactory() {
+    public ConsumerFactory<String, Long> userServiceConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "user-service-group");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, userServiceGroupId + "-" + hostname);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Long> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, Long> userServiceKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Long> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
+        factory.setConsumerFactory(userServiceConsumerFactory());
+        return factory;
+    }
+
+    // Конфигурация для user-service-admin-group
+    @Bean
+    public ConsumerFactory<String, Long> userServiceAdminConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, userServiceAdminGroupId + "-" + hostname);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, Long> userServiceAdminKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Long> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(userServiceAdminConsumerFactory());
         return factory;
     }
 }
