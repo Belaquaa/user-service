@@ -16,4 +16,3 @@ kafka:
   consumer:
     user-service-group-id: user-service-group
     user-service-admin-group-id: user-service-admin-group
-HOSTNAME: localhost

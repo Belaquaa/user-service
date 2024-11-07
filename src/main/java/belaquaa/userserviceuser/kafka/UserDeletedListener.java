@@ -19,10 +19,12 @@ public class UserDeletedListener {
             containerFactory = "userServiceKafkaListenerContainerFactory"
     )
     public void listenUserDeleted(Long userId) {
+        log.info("Получено сообщение из 'user-deleted-topic' для пользователя ID {}", userId);
         Cache cache = cacheManager.getCache("users");
         if (cache != null) {
             cache.evict(userId);
             cache.evict(userId + "-includeDeleted");
+            log.info("Кэш для пользователя ID {} очищен", userId);
         } else {
             log.warn("Кэш 'users' не найден при попытке удалить пользователя с ID {}", userId);
         }
